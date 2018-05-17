@@ -1,0 +1,5 @@
+include AUTHORS.rst
+include CONTRIBUTING.rst
+include HISTORY.rst
+include README.rst
+recursive-include django_cookies_samesite *.html *.png *.gif *js *.css *jpg *jpeg *svg *py
