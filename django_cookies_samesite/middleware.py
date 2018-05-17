@@ -3,6 +3,8 @@ import warnings
 
 import django
 
+from distutils.version import LooseVersion
+
 from django.conf import settings
 
 try:
@@ -21,9 +23,9 @@ class CookiesSameSite(MiddlewareMixin):
     This middleware will be obsolete when your app will start using Django 2.1.
     """
     def process_response(self, request, response):
-        if django.__version__ >= '2.1.0':
+        if LooseVersion(django.__version__) >= LooseVersion('2.1.0'):
             raise DeprecationWarning(
-                'Your version of Django supports SameSite flag in cookies. '
+                'Your version of Django supports SameSite flag in the cookies mechanism. '
                 'You should remove django-cookies-samesite from your project.'
             )
 
