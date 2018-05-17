@@ -3,12 +3,9 @@
 language: python
 
 python:
-  - "3.6"
+  - "2.7"
 
 env: 
-  - TOX_ENV=py36-django-111
-  - TOX_ENV=py35-django-111
-  - TOX_ENV=py34-django-111
   - TOX_ENV=py27-django-111
 
 matrix:
