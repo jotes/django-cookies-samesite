@@ -1,4 +1,9 @@
-import Cookie
+# Cookie library has moved to http in python3
+try:
+    import Cookie
+except ImportError:
+    import https.cookies as Cookie
+
 import warnings
 
 import django
