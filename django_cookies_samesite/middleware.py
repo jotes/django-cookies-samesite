@@ -2,7 +2,7 @@
 try:
     import Cookie
 except ImportError:
-    import https.cookies as Cookie
+    import http.cookies as Cookie
 
 import warnings
 
