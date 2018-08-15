@@ -45,7 +45,7 @@ class CookiesSamesiteTests(TestCase):
             with self.assertRaises(DeprecationWarning) as exc:
                 self.client.get('/cookies-test/')
 
-            self.assertEqual(exc.exception.message, (
+            self.assertEqual(exc.exception.args[0], (
                 'Your version of Django supports SameSite flag in cookies. '
                 'You should remove django-cookies-samesite from your project.'
             ))
@@ -54,7 +54,7 @@ class CookiesSamesiteTests(TestCase):
             with self.assertRaises(DeprecationWarning) as exc:
                 self.client.get('/cookies-test/')
 
-            self.assertEqual(exc.exception.message, (
+            self.assertEqual(exc.exception.args[0], (
                 'Your version of Django supports SameSite flag in cookies. '
                 'You should remove django-cookies-samesite from your project.'
             ))
@@ -68,7 +68,7 @@ class CookiesSamesiteTests(TestCase):
             with self.assertRaises(ValueError) as exc:
                 self.client.get('/cookies-test/')
 
-            self.assertEqual(exc.exception.message, 'SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.')
+            self.assertEqual(exc.exception.args[0], 'SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.')
 
         # Test if SameSite flags is set to custom cookies
         with self.settings(
@@ -98,12 +98,12 @@ class CookiesSamesiteTests(TestCase):
             with self.assertRaises(ValueError) as exc:
                 self.client.get('/cookies-test/')
 
-            self.assertEqual(exc.exception.message, 'samesite must be "lax" or "strict".')
+            self.assertEqual(exc.exception.args[0], 'samesite must be "lax" or "strict".')
 
     def test_cookie_samesite_unset(self):
         with self.settings(SESSION_COOKIE_SAMESITE=None):
             response = self.client.get('/cookies-test/')
-
+            print(response.cookies)
             self.assertEqual(response.cookies['sessionid'].get('samesite'), '')
             self.assertEqual(response.cookies['csrftoken'].get('samesite'), '')
 
