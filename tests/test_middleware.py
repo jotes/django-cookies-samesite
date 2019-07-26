@@ -115,3 +115,22 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('; SameSite=lax' not in cookies_string[2])
             self.assertTrue('; SameSite=strict' not in cookies_string[2])
 
+
+    def test_cookie_names_changed(self):
+        session_name = 'sessionid-test'
+        csrf_name = 'csrftoken-test'
+        with self.settings(
+            SESSION_COOKIE_NAME=session_name,
+            CSRF_COOKIE_NAME=csrf_name,
+            SESSION_COOKIE_SAMESITE='lax'
+        ):
+            response = self.client.get('/cookies-test/')
+
+            self.assertEqual(response.cookies[session_name]['samesite'], 'lax')
+            self.assertEqual(response.cookies[csrf_name]['samesite'], 'lax')
+            cookies_string = sorted(response.cookies.output().split('\r\n'))
+
+            self.assertTrue(csrf_name + '=' in cookies_string[0])
+            self.assertTrue('; SameSite=lax' in cookies_string[0])
+            self.assertTrue(session_name + '=' in cookies_string[2])
+            self.assertTrue('; SameSite=lax' in cookies_string[2])
