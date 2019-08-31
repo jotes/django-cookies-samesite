@@ -44,7 +44,7 @@ class CookiesSameSite(MiddlewareMixin):
             raise ValueError('SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.')
 
         protected_cookies = set(protected_cookies)
-        protected_cookies |= {'sessionid', 'csrftoken'}
+        protected_cookies |= {settings.SESSION_COOKIE_NAME, settings.CSRF_COOKIE_NAME}
 
         samesite_flag = getattr(
             settings,
