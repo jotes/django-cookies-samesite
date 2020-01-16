@@ -39,7 +39,7 @@ Set your preferred SameSite policy in `settings.py`:
 
    SESSION_COOKIE_SAMESITE = 'Lax'
 
-This can be 'Lax', 'Strict', or None to disable the flag.
+This can be 'Lax', 'None', 'Strict', or None to disable the flag.
 
 Also, you can set this flag in your custom cookies:
 
