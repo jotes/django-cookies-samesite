@@ -17,6 +17,7 @@ BUMPVERSION := docker run \
    --env GROUP --env GROUP_ID=`id -g` \
    --interactive --tty --rm \
    --volume $(shell pwd):/home/$(USER_NAME)/host  \
+   -v ~/.gitconfig:/etc/gitconfig \
    -w /home/$(USER_NAME)/host \
    jesuspv/bumpversion --config-file setup.cfg
 
