@@ -10,7 +10,16 @@ except:
 webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
 endef
 export BROWSER_PYSCRIPT
+USER_NAME := $(shell id -u -n)
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
+BUMPVERSION := docker run \
+   --env USER  --env USER_ID=`id -u` \
+   --env GROUP --env GROUP_ID=`id -g` \
+   --interactive --tty --rm \
+   --volume $(shell pwd):/home/$(USER_NAME)/host  \
+   -w /home/$(USER_NAME)/host \
+   jesuspv/bumpversion --config-file setup.cfg
+
 
 help:
 	@grep '^[a-zA-Z]' $(MAKEFILE_LIST) | sort | awk -F ':.*?## ' 'NF==2 {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
@@ -57,3 +66,7 @@ release: clean ## package and upload a release
 sdist: clean ## package
 	python setup.py sdist
 	ls -l dist
+
+bump: part?=minor
+bump: ## Relese a new version
+	$(BUMPVERSION) $(part)
