@@ -50,6 +50,25 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('sessionid=' in cookies_string[2])
             self.assertTrue('; SameSite=none' in cookies_string[2])
 
+        with self.settings(SESSION_COOKIE_SAMESITE='none', SESSION_COOKIE_SAMESITE_FORCE_ALL=True):
+            response = self.client.get('/cookies-test/')
+
+            self.assertEqual(response.cookies['sessionid']['samesite'], 'none')
+            self.assertEqual(response.cookies['csrftoken']['samesite'], 'none')
+            self.assertEqual(response.cookies['custom_cookie']['samesite'], 'none')
+            self.assertEqual(response.cookies['zcustom_cookie']['samesite'], 'none')
+
+            cookies_string = sorted(response.cookies.output().split('\r\n'))
+
+            self.assertTrue('custom_cookie=' in cookies_string[1])
+            self.assertTrue('; SameSite=none' in cookies_string[1])
+            self.assertTrue('csrftoken=' in cookies_string[0])
+            self.assertTrue('; SameSite=none' in cookies_string[0])
+            self.assertTrue('sessionid=' in cookies_string[2])
+            self.assertTrue('; SameSite=none' in cookies_string[2])
+            self.assertTrue('zcustom_cookie=' in cookies_string[3])
+            self.assertTrue('; SameSite=none' in cookies_string[3])
+
     @unittest.skip('@TODO')
     def test_cookie_samesite_django21(self):
         # Raise DeprecationWarning for newer versions of Django
