@@ -48,8 +48,13 @@ Also, you can set this flag in your custom cookies:
    SESSION_COOKIE_SAMESITE_KEYS = {'my-custom-cookies'}
 
 
-After that you should be able to see SameSite flag set for session and csrf cookies:
-![screenshot]()
+After that you should be able to see the SameSite flag set for session and csrf cookies.
+
+You can set the SameSite flag on all cookies (even on those coming from third-party Django apps):
+
+.. code-block:: python
+
+    SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
 Running Tests
 -------------
@@ -72,3 +77,10 @@ Tools used in rendering this package:
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`cookiecutter-djangopackage`: https://github.com/pydanny/cookiecutter-djangopackage
+
+Contributors
+------------
+* Jørn Lomax <northlomax@gmail.com>
+* Antoine Lefebvre-Brossard <antoinelb@protonmail.com>
+* Code Hugger (Matthew Jones) <jonespm@umich.edu>
+* Mykolas Kvieska <mykolas921@gmail.com>
