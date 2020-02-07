@@ -3,6 +3,8 @@ try:
     import Cookie
 except ImportError:
     import http.cookies as Cookie
+    
+import re
 
 import warnings
 
@@ -28,6 +30,8 @@ class CookiesSameSite(MiddlewareMixin):
     This middleware will be obsolete when your app will start using Django 2.1.
     """
     def process_response(self, request, response):
+        if re.match(request.META['HTTP_USER_AGENT']:
+            return response
         if LooseVersion(django.__version__) >= LooseVersion('2.1.0'):
             raise DeprecationWarning(
                 'Your version of Django supports SameSite flag in the cookies mechanism. '
