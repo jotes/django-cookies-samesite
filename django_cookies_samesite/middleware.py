@@ -21,7 +21,7 @@ except ImportError:
 
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
-
+CHROME_VALIDATE_REGEX = "Chrome\/((5[1-9])|6[1-6])"
 
 class CookiesSameSite(MiddlewareMixin):
     """
@@ -30,7 +30,8 @@ class CookiesSameSite(MiddlewareMixin):
     This middleware will be obsolete when your app will start using Django 2.1.
     """
     def process_response(self, request, response):
-        if re.match(request.META['HTTP_USER_AGENT']:
+        http_user_agent = request.META['HTTP_USER_AGENT']
+        if re.search(CHROME_VALIDATE_REGEX, http_user_agent):
             return response
         if LooseVersion(django.__version__) >= LooseVersion('2.1.0'):
             raise DeprecationWarning(
