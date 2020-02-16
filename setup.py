@@ -42,13 +42,12 @@ if sys.argv[-1] == 'tag':
     sys.exit()
 
 readme = open('README.rst').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='django-cookies-samesite',
     version=version,
     description="""Middleware which sets SameSite flag for session and csrf cookies in legacy versions of Django.""",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author='Jarek "jotes" Śmiejczak',
     author_email='poke@jotes.work',
     url='https://github.com/jotes/django-cookies-samesite',
