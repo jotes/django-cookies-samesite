@@ -21,7 +21,7 @@ except ImportError:
 
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
-CHROME_VALIDATE_REGEX = "Chrom[^ \/]+\/+(5[1-9]|6[0-6])\b"
+CHROME_VALIDATE_REGEX = "(Chrome|Chromium)\/((5[1-9])|6[0-6])"
 
 class CookiesSameSite(MiddlewareMixin):
     """
