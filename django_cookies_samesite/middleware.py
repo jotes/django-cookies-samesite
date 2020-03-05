@@ -3,6 +3,8 @@ try:
     import Cookie
 except ImportError:
     import http.cookies as Cookie
+    
+import re
 
 import warnings
 
@@ -19,7 +21,7 @@ except ImportError:
 
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
-
+CHROME_VALIDATE_REGEX = "(Chrome|Chromium)\/((5[1-9])|6[0-6])"
 
 class CookiesSameSite(MiddlewareMixin):
     """
@@ -28,6 +30,11 @@ class CookiesSameSite(MiddlewareMixin):
     This middleware will be obsolete when your app will start using Django 2.1.
     """
     def process_response(self, request, response):
+        # same-site = None introduced for Chrome 80 breaks for Chrome 51-66 
+        # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
+        http_user_agent = request.META.get('HTTP_USER_AGENT') or " "
+        if re.search(CHROME_VALIDATE_REGEX, http_user_agent):
+            return response
         if LooseVersion(django.__version__) >= LooseVersion('2.1.0'):
             raise DeprecationWarning(
                 'Your version of Django supports SameSite flag in the cookies mechanism. '
