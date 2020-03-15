@@ -23,11 +23,14 @@ except ImportError:
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
 CHROME_VALIDATE_REGEX = "(Chrome|Chromium)\/((5[1-9])|6[0-6])"
 
+# TODO: change this to 3.1.0 once Django 3.1 is released
+DJANGO_SUPPORTED_VERSION = '3.0.0'
+
 class CookiesSameSite(MiddlewareMixin):
     """
-    Support for SameSite attribute in Cookies is implemented in Django 2.1 and won't
-    be backported to Django 1.11.x.
-    This middleware will be obsolete when your app will start using Django 2.1.
+    Support for SameSite attribute in Cookies is fully implemented in Django 3.1 and won't
+    be back-ported to Django 2.x.
+    This middleware will be obsolete when your app will start using Django 3.1.
     """
     def process_response(self, request, response):
         # same-site = None introduced for Chrome 80 breaks for Chrome 51-66 
@@ -35,7 +38,7 @@ class CookiesSameSite(MiddlewareMixin):
         http_user_agent = request.META.get('HTTP_USER_AGENT') or " "
         if re.search(CHROME_VALIDATE_REGEX, http_user_agent):
             return response
-        if LooseVersion(django.__version__) >= LooseVersion('2.1.0'):
+        if LooseVersion(django.get_version()) >= LooseVersion(DJANGO_SUPPORTED_VERSION):
             raise DeprecationWarning(
                 'Your version of Django supports SameSite flag in the cookies mechanism. '
                 'You should remove django-cookies-samesite from your project.'
