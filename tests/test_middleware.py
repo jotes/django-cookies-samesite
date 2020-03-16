@@ -2,12 +2,14 @@ import unittest
 
 from mock import patch
 
-from django.http import HttpResponse
-
+import django
 from django.test import TestCase
+
+from django_cookies_samesite.middleware import DJANGO_SUPPORTED_VERSION
 
 
 class CookiesSamesiteTests(TestCase):
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_strict(self):
         with self.settings(SESSION_COOKIE_SAMESITE='strict'):
             response = self.client.get('/cookies-test/')
@@ -24,6 +26,7 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('sessionid=', cookies_string[2])
             self.assertTrue('; SameSite=strict', cookies_string[2])
 
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_lax(self):
         with self.settings(SESSION_COOKIE_SAMESITE='lax'):
             response = self.client.get('/cookies-test/')
@@ -37,6 +40,7 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('sessionid=' in cookies_string[2])
             self.assertTrue('; SameSite=lax' in cookies_string[2])
 
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_none(self):
         with self.settings(SESSION_COOKIE_SAMESITE='none'):
             response = self.client.get('/cookies-test/')
@@ -69,28 +73,30 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('zcustom_cookie=' in cookies_string[3])
             self.assertTrue('; SameSite=none' in cookies_string[3])
 
-    @unittest.skip('@TODO')
-    def test_cookie_samesite_django21(self):
+    @unittest.skipIf(django.get_version() < DJANGO_SUPPORTED_VERSION, 'should skip if Django does not support')
+    def test_cookie_samesite_django30(self):
         # Raise DeprecationWarning for newer versions of Django
 
-        with patch('django.__version__', return_value='2.1.0'):
+        with patch('django.get_version', return_value=DJANGO_SUPPORTED_VERSION):
+            with self.assertRaises(DeprecationWarning) as exc:
+                self.client.get('/cookies-test/')
+
+            # print(exc.exception.args)
+            self.assertEqual(exc.exception.args[0], (
+                'Your version of Django supports SameSite flag in the cookies mechanism. '
+                'You should remove django-cookies-samesite from your project.'
+            ))
+
+        with patch('django_cookies_samesite.middleware.django.get_version', return_value=DJANGO_SUPPORTED_VERSION):
             with self.assertRaises(DeprecationWarning) as exc:
                 self.client.get('/cookies-test/')
 
             self.assertEqual(exc.exception.args[0], (
-                'Your version of Django supports SameSite flag in cookies. '
+                'Your version of Django supports SameSite flag in the cookies mechanism. '
                 'You should remove django-cookies-samesite from your project.'
             ))
 
-        with patch('django_cookies_samesite.middleware.django.__version__', return_value='2.3.0'):
-            with self.assertRaises(DeprecationWarning) as exc:
-                self.client.get('/cookies-test/')
-
-            self.assertEqual(exc.exception.args[0], (
-                'Your version of Django supports SameSite flag in cookies. '
-                'You should remove django-cookies-samesite from your project.'
-            ))
-
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_custom_cookies(self):
         # Middleware shouldn't accept malformed settings
         with self.settings(
@@ -125,6 +131,7 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('zcustom_cookie=' in cookies_string[3])
             self.assertTrue('; SameSite=lax' not in cookies_string[3])
 
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_invalid(self):
         with self.settings(SESSION_COOKIE_SAMESITE='invalid'):
             with self.assertRaises(ValueError) as exc:
@@ -132,6 +139,7 @@ class CookiesSamesiteTests(TestCase):
 
             self.assertEqual(exc.exception.args[0], 'samesite must be "lax", "none", or "strict".')
 
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_unset(self):
         with self.settings(SESSION_COOKIE_SAMESITE=None):
             response = self.client.get('/cookies-test/')
@@ -147,7 +155,7 @@ class CookiesSamesiteTests(TestCase):
             self.assertTrue('; SameSite=lax' not in cookies_string[2])
             self.assertTrue('; SameSite=strict' not in cookies_string[2])
 
-
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_names_changed(self):
         session_name = 'sessionid-test'
         csrf_name = 'csrftoken-test'
