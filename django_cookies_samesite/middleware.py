@@ -3,10 +3,8 @@ try:
     import Cookie
 except ImportError:
     import http.cookies as Cookie
-    
-import re
 
-import warnings
+import re
 
 import django
 
@@ -21,10 +19,11 @@ except ImportError:
 
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
-CHROME_VALIDATE_REGEX = "(Chrome|Chromium)\/((5[1-9])|6[0-6])"
+CHROME_VALIDATE_REGEX = re.compile(r"(Chrome|Chromium)\/((5[1-9])|6[0-6])")
 
 # TODO: change this to 3.1.0 once Django 3.1 is released
 DJANGO_SUPPORTED_VERSION = '3.0.0'
+
 
 class CookiesSameSite(MiddlewareMixin):
     """
@@ -32,8 +31,9 @@ class CookiesSameSite(MiddlewareMixin):
     be back-ported to Django 2.x.
     This middleware will be obsolete when your app will start using Django 3.1.
     """
+
     def process_response(self, request, response):
-        # same-site = None introduced for Chrome 80 breaks for Chrome 51-66 
+        # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
         # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
         http_user_agent = request.META.get('HTTP_USER_AGENT') or " "
         if re.search(CHROME_VALIDATE_REGEX, http_user_agent):
