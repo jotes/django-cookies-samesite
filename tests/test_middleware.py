@@ -1,5 +1,6 @@
 import unittest
 from contextlib import contextmanager
+from distutils.version import LooseVersion
 
 from mock import patch
 
@@ -17,9 +18,13 @@ class CookieSamesiteConfigTests(TestCase):
         """Check if middleware reads default values as expected"""
         with self.settings():
             middleware = CookiesSameSite()
-            self.assertEqual(middleware.samesite_flag, '')
             self.assertEqual(middleware.samesite_force_all, None)
             self.assertEqual(middleware.protected_cookies, {'sessionid', 'csrftoken'})
+
+            if LooseVersion(django.get_version()) >= LooseVersion('3.0'):
+                self.assertEqual(middleware.samesite_flag, 'Lax')
+            else:
+                self.assertEqual(middleware.samesite_flag, '')
 
     @data(
         '',
@@ -38,6 +43,7 @@ class CookieSamesiteConfigTests(TestCase):
             self.assertEqual(middleware.samesite_flag, 'Lax')
             self.assertEqual(middleware.samesite_force_all, True)
             self.assertEqual(middleware.protected_cookies, {'sessionid', 'csrftoken', 'custom_cookie'})
+
 
 @ddt
 class CookiesSamesiteTestsWithConfigPrefix(TestCase):
@@ -117,7 +123,6 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
     @unittest.skipIf(django.get_version() < DJANGO_SUPPORTED_VERSION, 'should skip if Django does not support')
     def test_cookie_samesite_django30(self):
         # Raise DeprecationWarning for newer versions of Django
-
         with patch('django.get_version', return_value=DJANGO_SUPPORTED_VERSION):
             with self.assertRaises(DeprecationWarning) as exc:
                 self.client.get('/cookies-test/')
@@ -215,7 +220,6 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
             self.assertTrue(session_name + '=' in cookies_string[2])
             self.assertTrue('; SameSite=Lax' in cookies_string[2])
 
-
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     @data(
         # Chrome
@@ -249,7 +253,7 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
         # Internet Explorer
         "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)",
         # Safari
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1" # noqa
     )
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_supported_browsers(self, ua_string):
@@ -272,7 +276,8 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
             self.assertTrue('; SameSite=Lax' in cookies_string[0])
             self.assertTrue('; SameSite=Lax' in cookies_string[2])
 
+
 @ddt
 class CookiesSamesiteTestsWithoutConfigPrefix(TestCase):
+    """Check if the middleware works in the same way if settings don't have DCS_ prefix."""
     config_prefix = ""
-

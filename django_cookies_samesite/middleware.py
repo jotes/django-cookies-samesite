@@ -20,15 +20,14 @@ except ImportError:
 
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
-CHROME_VALIDATE_REGEX = "(Chrome|Chromium)\/((5[1-9])|6[0-6])"
+CHROME_VALIDATE_REGEX = re.compile(r"(Chrome|Chromium)\/((5[1-9])|6[0-6])")
 
 # TODO: change this to 3.1.0 once Django 3.1 is released
 DJANGO_SUPPORTED_VERSION = '3.0.0'
 
-def get_config_setting(setting_name, default_value=None):
-    """
 
-    """
+def get_config_setting(setting_name, default_value=None):
+    """Load the Django setting with DCS_ prefix and fallback to the legacy name if not found."""
     return getattr(
         settings,
         "DCS_{}".format(setting_name),
@@ -56,7 +55,7 @@ class CookiesSameSite(MiddlewareMixin):
         self.samesite_flag = str(samesite_flag).capitalize() if samesite_flag is not None else ''
         self.samesite_force_all = get_config_setting("SESSION_COOKIE_SAMESITE_FORCE_ALL")
 
-        return super().__init__(*args, **kwargs)
+        return super(CookiesSameSite, self).__init__(*args, **kwargs)
 
     def process_response(self, request, response):
         # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
