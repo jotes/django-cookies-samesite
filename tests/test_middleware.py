@@ -1,4 +1,5 @@
 import unittest
+from contextlib import contextmanager
 
 from mock import patch
 
@@ -7,74 +8,111 @@ import django
 from ddt import ddt, data
 from django.test import TestCase
 
-from django_cookies_samesite.middleware import DJANGO_SUPPORTED_VERSION
+from django_cookies_samesite.middleware import DJANGO_SUPPORTED_VERSION, CookiesSameSite
 
 
 @ddt
-class CookiesSamesiteTests(TestCase):
+class CookieSamesiteConfigTests(TestCase):
+    def test_settings_default_values(self):
+        """Check if middleware reads default values as expected"""
+        with self.settings():
+            middleware = CookiesSameSite()
+            self.assertEqual(middleware.samesite_flag, '')
+            self.assertEqual(middleware.samesite_force_all, None)
+            self.assertEqual(middleware.protected_cookies, {'sessionid', 'csrftoken'})
+
+    @data(
+        '',
+        'DCS_'
+    )
+    def test_settings(self, config_prefix):
+        """
+        Check if the cookie middleware fetches prefixed settings.
+        """
+        with self.settings(**{
+            "{}SESSION_COOKIE_SAMESITE".format(config_prefix): 'Lax',
+            "{}SESSION_COOKIE_SAMESITE_FORCE_ALL".format(config_prefix): True,
+            "{}SESSION_COOKIE_SAMESITE_KEYS".format(config_prefix): {'custom_cookie'},
+        }):
+            middleware = CookiesSameSite()
+            self.assertEqual(middleware.samesite_flag, 'Lax')
+            self.assertEqual(middleware.samesite_force_all, True)
+            self.assertEqual(middleware.protected_cookies, {'sessionid', 'csrftoken', 'custom_cookie'})
+
+@ddt
+class CookiesSamesiteTestsWithConfigPrefix(TestCase):
+    config_prefix = "DCS_"
+    @contextmanager
+    def settings(self, **config_settings):
+        """Override all settings with the prefix name"""
+        def format_key(k):
+            """Prefix only the middleware settings."""
+            return "{}{}".format(self.config_prefix, k) if k.startswith("SESSION_COOKIE_SAMESITE") else k
+
+        prefixed_settings = {
+            format_key(k): v for k, v in config_settings.items()
+        }
+        with super(CookiesSamesiteTestsWithConfigPrefix, self).settings(**prefixed_settings):
+            yield
+
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
-    def test_cookie_samesite_strict(self):
-        with self.settings(SESSION_COOKIE_SAMESITE='strict'):
+    def test_cookie_samesite_Strict(self):
+        with self.settings(SESSION_COOKIE_SAMESITE='Strict'):
             response = self.client.get('/cookies-test/')
-
-            self.assertEqual(response.cookies['sessionid']['samesite'], 'strict')
-            self.assertEqual(response.cookies['csrftoken']['samesite'], 'strict')
-
-            csrf_token = response.cookies['csrftoken']
-            session_id = response.cookies['sessionid']
+            self.assertEqual(response.cookies['sessionid']['samesite'], 'Strict')
+            self.assertEqual(response.cookies['csrftoken']['samesite'], 'Strict')
 
             cookies_string = sorted(response.cookies.output().split('\r\n'))
             self.assertTrue('csrftoken=', cookies_string[0])
-            self.assertTrue('; SameSite=strict', cookies_string[0])
+            self.assertTrue('; SameSite=Strict', cookies_string[0])
             self.assertTrue('sessionid=', cookies_string[2])
-            self.assertTrue('; SameSite=strict', cookies_string[2])
+            self.assertTrue('; SameSite=Strict', cookies_string[2])
 
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
-    def test_cookie_samesite_lax(self):
-        with self.settings(SESSION_COOKIE_SAMESITE='lax'):
+    def test_cookie_samesite_Lax(self):
+        with self.settings(SESSION_COOKIE_SAMESITE='Lax'):
             response = self.client.get('/cookies-test/')
+            self.assertEqual(response.cookies['sessionid']['samesite'], 'Lax')
+            self.assertEqual(response.cookies['csrftoken']['samesite'], 'Lax')
 
-            self.assertEqual(response.cookies['sessionid']['samesite'], 'lax')
-            self.assertEqual(response.cookies['csrftoken']['samesite'], 'lax')
             cookies_string = sorted(response.cookies.output().split('\r\n'))
-
             self.assertTrue('csrftoken=' in cookies_string[0])
-            self.assertTrue('; SameSite=lax' in cookies_string[0])
+            self.assertTrue('; SameSite=Lax' in cookies_string[0])
             self.assertTrue('sessionid=' in cookies_string[2])
-            self.assertTrue('; SameSite=lax' in cookies_string[2])
+            self.assertTrue('; SameSite=Lax' in cookies_string[2])
 
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_none(self):
-        with self.settings(SESSION_COOKIE_SAMESITE='none'):
+        with self.settings(SESSION_COOKIE_SAMESITE='None'):
             response = self.client.get('/cookies-test/')
 
-            self.assertEqual(response.cookies['sessionid']['samesite'], 'none')
-            self.assertEqual(response.cookies['csrftoken']['samesite'], 'none')
-            cookies_string = sorted(response.cookies.output().split('\r\n'))
+            self.assertEqual(response.cookies['sessionid']['samesite'], 'None')
+            self.assertEqual(response.cookies['csrftoken']['samesite'], 'None')
 
+            cookies_string = sorted(response.cookies.output().split('\r\n'))
             self.assertTrue('csrftoken=' in cookies_string[0])
-            self.assertTrue('; SameSite=none' in cookies_string[0])
+            self.assertTrue('; SameSite=None' in cookies_string[0])
             self.assertTrue('sessionid=' in cookies_string[2])
-            self.assertTrue('; SameSite=none' in cookies_string[2])
+            self.assertTrue('; SameSite=None' in cookies_string[2])
 
-        with self.settings(SESSION_COOKIE_SAMESITE='none', SESSION_COOKIE_SAMESITE_FORCE_ALL=True):
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
+    def test_cookie_samesite_none_force_all(self):
+        with self.settings(SESSION_COOKIE_SAMESITE='None', SESSION_COOKIE_SAMESITE_FORCE_ALL=True):
             response = self.client.get('/cookies-test/')
-
-            self.assertEqual(response.cookies['sessionid']['samesite'], 'none')
-            self.assertEqual(response.cookies['csrftoken']['samesite'], 'none')
-            self.assertEqual(response.cookies['custom_cookie']['samesite'], 'none')
-            self.assertEqual(response.cookies['zcustom_cookie']['samesite'], 'none')
+            self.assertEqual(response.cookies['sessionid']['samesite'], 'None')
+            self.assertEqual(response.cookies['csrftoken']['samesite'], 'None')
+            self.assertEqual(response.cookies['custom_cookie']['samesite'], 'None')
+            self.assertEqual(response.cookies['zcustom_cookie']['samesite'], 'None')
 
             cookies_string = sorted(response.cookies.output().split('\r\n'))
-
             self.assertTrue('custom_cookie=' in cookies_string[1])
-            self.assertTrue('; SameSite=none' in cookies_string[1])
+            self.assertTrue('; SameSite=None' in cookies_string[1])
             self.assertTrue('csrftoken=' in cookies_string[0])
-            self.assertTrue('; SameSite=none' in cookies_string[0])
+            self.assertTrue('; SameSite=None' in cookies_string[0])
             self.assertTrue('sessionid=' in cookies_string[2])
-            self.assertTrue('; SameSite=none' in cookies_string[2])
+            self.assertTrue('; SameSite=None' in cookies_string[2])
             self.assertTrue('zcustom_cookie=' in cookies_string[3])
-            self.assertTrue('; SameSite=none' in cookies_string[3])
+            self.assertTrue('; SameSite=None' in cookies_string[3])
 
     @unittest.skipIf(django.get_version() < DJANGO_SUPPORTED_VERSION, 'should skip if Django does not support')
     def test_cookie_samesite_django30(self):
@@ -84,7 +122,6 @@ class CookiesSamesiteTests(TestCase):
             with self.assertRaises(DeprecationWarning) as exc:
                 self.client.get('/cookies-test/')
 
-            # print(exc.exception.args)
             self.assertEqual(exc.exception.args[0], (
                 'Your version of Django supports SameSite flag in the cookies mechanism. '
                 'You should remove django-cookies-samesite from your project.'
@@ -103,7 +140,7 @@ class CookiesSamesiteTests(TestCase):
     def test_cookie_samesite_custom_cookies(self):
         # Middleware shouldn't accept malformed settings
         with self.settings(
-            SESSION_COOKIE_SAMESITE='lax',
+            SESSION_COOKIE_SAMESITE='Lax',
             SESSION_COOKIE_SAMESITE_KEYS='something'
         ):
             with self.assertRaises(ValueError) as exc:
@@ -113,26 +150,26 @@ class CookiesSamesiteTests(TestCase):
 
         # Test if SameSite flags is set to custom cookies
         with self.settings(
-            SESSION_COOKIE_SAMESITE='lax',
+            SESSION_COOKIE_SAMESITE='Lax',
             SESSION_COOKIE_SAMESITE_KEYS=('custom_cookie',)
         ):
             response = self.client.get('/cookies-test/')
 
-            self.assertEqual(response.cookies['sessionid']['samesite'], 'lax')
-            self.assertEqual(response.cookies['csrftoken']['samesite'], 'lax')
-            self.assertEqual(response.cookies['custom_cookie']['samesite'], 'lax')
+            self.assertEqual(response.cookies['sessionid']['samesite'], 'Lax')
+            self.assertEqual(response.cookies['csrftoken']['samesite'], 'Lax')
+            self.assertEqual(response.cookies['custom_cookie']['samesite'], 'Lax')
             self.assertEqual(response.cookies['zcustom_cookie']['samesite'], '')
 
             cookies_string = sorted(response.cookies.output().split('\r\n'))
 
             self.assertTrue('custom_cookie=' in cookies_string[1])
-            self.assertTrue('; SameSite=lax' in cookies_string[1])
+            self.assertTrue('; SameSite=Lax' in cookies_string[1])
             self.assertTrue('csrftoken=' in cookies_string[0])
-            self.assertTrue('; SameSite=lax' in cookies_string[0])
+            self.assertTrue('; SameSite=Lax' in cookies_string[0])
             self.assertTrue('sessionid=' in cookies_string[2])
-            self.assertTrue('; SameSite=lax' in cookies_string[2])
+            self.assertTrue('; SameSite=Lax' in cookies_string[2])
             self.assertTrue('zcustom_cookie=' in cookies_string[3])
-            self.assertTrue('; SameSite=lax' not in cookies_string[3])
+            self.assertTrue('; SameSite=Lax' not in cookies_string[3])
 
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_invalid(self):
@@ -140,23 +177,23 @@ class CookiesSamesiteTests(TestCase):
             with self.assertRaises(ValueError) as exc:
                 self.client.get('/cookies-test/')
 
-            self.assertEqual(exc.exception.args[0], 'samesite must be "lax", "none", or "strict".')
+            self.assertEqual(exc.exception.args[0], 'samesite must be "Lax", "None", or "Strict".')
 
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_samesite_unset(self):
         with self.settings(SESSION_COOKIE_SAMESITE=None):
             response = self.client.get('/cookies-test/')
-            print(response.cookies)
             self.assertEqual(response.cookies['sessionid'].get('samesite'), '')
             self.assertEqual(response.cookies['csrftoken'].get('samesite'), '')
 
             cookies_string = sorted(response.cookies.output().split('\r\n'))
             self.assertTrue('csrftoken=' in cookies_string[0])
-            self.assertTrue('; SameSite=lax' not in cookies_string[0])
-            self.assertTrue('; SameSite=strict' not in cookies_string[0])
+            self.assertTrue('; SameSite=Lax' not in cookies_string[0])
+            self.assertTrue('; SameSite=Strict' not in cookies_string[0])
+            self.assertTrue('; SameSite=None' not in cookies_string[0])
             self.assertTrue('sessionid=' in cookies_string[2])
-            self.assertTrue('; SameSite=lax' not in cookies_string[2])
-            self.assertTrue('; SameSite=strict' not in cookies_string[2])
+            self.assertTrue('; SameSite=Lax' not in cookies_string[2])
+            self.assertTrue('; SameSite=None' not in cookies_string[2])
 
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_cookie_names_changed(self):
@@ -165,23 +202,23 @@ class CookiesSamesiteTests(TestCase):
         with self.settings(
             SESSION_COOKIE_NAME=session_name,
             CSRF_COOKIE_NAME=csrf_name,
-            SESSION_COOKIE_SAMESITE='lax'
+            SESSION_COOKIE_SAMESITE='Lax'
         ):
             response = self.client.get('/cookies-test/')
 
-            self.assertEqual(response.cookies[session_name]['samesite'], 'lax')
-            self.assertEqual(response.cookies[csrf_name]['samesite'], 'lax')
+            self.assertEqual(response.cookies[session_name]['samesite'], 'Lax')
+            self.assertEqual(response.cookies[csrf_name]['samesite'], 'Lax')
             cookies_string = sorted(response.cookies.output().split('\r\n'))
 
             self.assertTrue(csrf_name + '=' in cookies_string[0])
-            self.assertTrue('; SameSite=lax' in cookies_string[0])
+            self.assertTrue('; SameSite=Lax' in cookies_string[0])
             self.assertTrue(session_name + '=' in cookies_string[2])
-            self.assertTrue('; SameSite=lax' in cookies_string[2])
+            self.assertTrue('; SameSite=Lax' in cookies_string[2])
 
 
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     @data(
-        # Chrome 
+        # Chrome
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
     )
     def test_unsupported_browsers(self, ua_string):
@@ -191,7 +228,7 @@ class CookiesSamesiteTests(TestCase):
         with self.settings(
             SESSION_COOKIE_NAME=session_name,
             CSRF_COOKIE_NAME=csrf_name,
-            SESSION_COOKIE_SAMESITE='lax'
+            SESSION_COOKIE_SAMESITE='Lax'
         ):
             response = self.client.get(
                 '/cookies-test/',
@@ -201,8 +238,8 @@ class CookiesSamesiteTests(TestCase):
             self.assertEqual(response.cookies[csrf_name]['samesite'], '')
 
             cookies_string = sorted(response.cookies.output().split('\r\n'))
-            self.assertTrue('; SameSite=lax' not in cookies_string[0])
-            self.assertTrue('; SameSite=lax' not in cookies_string[1])
+            self.assertTrue('; SameSite=Lax' not in cookies_string[0])
+            self.assertTrue('; SameSite=Lax' not in cookies_string[1])
 
     @data(
         # Chrome
@@ -210,7 +247,7 @@ class CookiesSamesiteTests(TestCase):
         # Firefox
         "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
         # Internet Explorer
-        "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)", 
+        "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)",
         # Safari
         "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"
     )
@@ -222,15 +259,20 @@ class CookiesSamesiteTests(TestCase):
         with self.settings(
             SESSION_COOKIE_NAME=session_name,
             CSRF_COOKIE_NAME=csrf_name,
-            SESSION_COOKIE_SAMESITE='lax'
+            SESSION_COOKIE_SAMESITE='Lax'
         ):
             response = self.client.get(
                 '/cookies-test/',
                 HTTP_USER_AGENT=ua_string,
             )
-            self.assertEqual(response.cookies[session_name]['samesite'], 'lax')
-            self.assertEqual(response.cookies[csrf_name]['samesite'], 'lax')
+            self.assertEqual(response.cookies[session_name]['samesite'], 'Lax')
+            self.assertEqual(response.cookies[csrf_name]['samesite'], 'Lax')
 
             cookies_string = sorted(response.cookies.output().split('\r\n'))
-            self.assertTrue('; SameSite=lax' in cookies_string[0])
-            self.assertTrue('; SameSite=lax' in cookies_string[2])
+            self.assertTrue('; SameSite=Lax' in cookies_string[0])
+            self.assertTrue('; SameSite=Lax' in cookies_string[2])
+
+@ddt
+class CookiesSamesiteTestsWithoutConfigPrefix(TestCase):
+    config_prefix = ""
+

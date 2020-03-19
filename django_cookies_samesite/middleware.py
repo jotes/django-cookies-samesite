@@ -3,10 +3,9 @@ try:
     import Cookie
 except ImportError:
     import http.cookies as Cookie
-    
+
 import re
 
-import warnings
 
 import django
 
@@ -26,61 +25,66 @@ CHROME_VALIDATE_REGEX = "(Chrome|Chromium)\/((5[1-9])|6[0-6])"
 # TODO: change this to 3.1.0 once Django 3.1 is released
 DJANGO_SUPPORTED_VERSION = '3.0.0'
 
+def get_config_setting(setting_name, default_value=None):
+    """
+
+    """
+    return getattr(
+        settings,
+        "DCS_{}".format(setting_name),
+        getattr(settings, setting_name, default_value)
+    )
+
+
 class CookiesSameSite(MiddlewareMixin):
     """
     Support for SameSite attribute in Cookies is fully implemented in Django 3.1 and won't
     be back-ported to Django 2.x.
     This middleware will be obsolete when your app will start using Django 3.1.
     """
+
+    def __init__(self, *args, **kwargs):
+        self.protected_cookies = get_config_setting("SESSION_COOKIE_SAMESITE_KEYS", set())
+
+        if not isinstance(self.protected_cookies, (list, set, tuple)):
+            raise ValueError("SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.")
+
+        self.protected_cookies = set(self.protected_cookies)
+        self.protected_cookies |= {settings.SESSION_COOKIE_NAME, settings.CSRF_COOKIE_NAME}
+
+        samesite_flag = get_config_setting("SESSION_COOKIE_SAMESITE", "")
+        self.samesite_flag = str(samesite_flag).capitalize() if samesite_flag is not None else ''
+        self.samesite_force_all = get_config_setting("SESSION_COOKIE_SAMESITE_FORCE_ALL")
+
+        return super().__init__(*args, **kwargs)
+
     def process_response(self, request, response):
-        # same-site = None introduced for Chrome 80 breaks for Chrome 51-66 
+        # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
         # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
         http_user_agent = request.META.get('HTTP_USER_AGENT') or " "
+
         if re.search(CHROME_VALIDATE_REGEX, http_user_agent):
             return response
+
         if LooseVersion(django.get_version()) >= LooseVersion(DJANGO_SUPPORTED_VERSION):
             raise DeprecationWarning(
-                'Your version of Django supports SameSite flag in the cookies mechanism. '
-                'You should remove django-cookies-samesite from your project.'
+                "Your version of Django supports SameSite flag in the cookies mechanism. "
+                "You should remove django-cookies-samesite from your project."
             )
 
-        protected_cookies = getattr(
-            settings,
-            'SESSION_COOKIE_SAMESITE_KEYS',
-            set()
-        ) or set()
-
-        if not isinstance(protected_cookies, (list, set, tuple)):
-            raise ValueError('SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.')
-
-        protected_cookies = set(protected_cookies)
-        protected_cookies |= {settings.SESSION_COOKIE_NAME, settings.CSRF_COOKIE_NAME}
-
-        samesite_flag = getattr(
-            settings,
-            'SESSION_COOKIE_SAMESITE',
-            None
-        )
-
-        if not samesite_flag:
+        if not self.samesite_flag:
             return response
 
-        samesite_flag = samesite_flag.lower()
+        # TODO: capitalize those values
+        if self.samesite_flag not in {'Lax', 'None', 'Strict'}:
+            raise ValueError("samesite must be \"Lax\", \"None\", or \"Strict\".")
 
-        if samesite_flag not in {'lax', 'none', 'strict'}:
-            raise ValueError('samesite must be "lax", "none", or "strict".')
-
-        samesite_force_all = getattr(
-            settings,
-            'SESSION_COOKIE_SAMESITE_FORCE_ALL',
-            False
-        )
-        if samesite_force_all:
+        if self.samesite_force_all:
             for cookie in response.cookies:
-                response.cookies[cookie]['samesite'] = samesite_flag
+                response.cookies[cookie]['samesite'] = self.samesite_flag
         else:
-            for cookie in protected_cookies:
+            for cookie in self.protected_cookies:
                 if cookie in response.cookies:
-                    response.cookies[cookie]['samesite'] = samesite_flag
+                    response.cookies[cookie]['samesite'] = self.samesite_flag
 
         return response
