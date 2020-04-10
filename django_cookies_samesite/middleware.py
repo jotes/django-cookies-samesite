@@ -18,8 +18,7 @@ try:
 except ImportError:
     MiddlewareMixin = object
 
-
-Cookie.Morsel._reserved['samesite'] = 'SameSite'
+Cookie.Morsel._reserved.update({"samesite": "SameSite", "secure": 'Secure'})
 CHROME_VALIDATE_REGEX = re.compile(r"(Chrome|Chromium)\/((5[1-9])|6[0-6])")
 
 # TODO: change this to 3.1.0 once Django 3.1 is released
@@ -57,6 +56,11 @@ class CookiesSameSite(MiddlewareMixin):
 
         return super(CookiesSameSite, self).__init__(*args, **kwargs)
 
+    def update_cookie(self, cookie, request, response):
+        response.cookies[cookie]['samesite'] = self.samesite_flag
+        if request.is_secure():
+            response.cookies[cookie]['secure'] = True
+
     def process_response(self, request, response):
         # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
         # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
@@ -80,10 +84,10 @@ class CookiesSameSite(MiddlewareMixin):
 
         if self.samesite_force_all:
             for cookie in response.cookies:
-                response.cookies[cookie]['samesite'] = self.samesite_flag
+                self.update_cookie(cookie, request, response)
         else:
             for cookie in self.protected_cookies:
                 if cookie in response.cookies:
-                    response.cookies[cookie]['samesite'] = self.samesite_flag
+                    self.update_cookie(cookie, request, response)
 
         return response
