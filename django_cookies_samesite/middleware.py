@@ -4,9 +4,6 @@ try:
 except ImportError:
     import http.cookies as Cookie
 
-import re
-
-
 import django
 
 from distutils.version import LooseVersion
@@ -18,9 +15,9 @@ try:
 except ImportError:
     MiddlewareMixin = object
 
+from django_cookies_samesite.user_agent_checker import UserAgentChecker
 
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
-CHROME_VALIDATE_REGEX = re.compile(r"(Chrome|Chromium)\/((5[1-9])|6[0-6])")
 
 # TODO: change this to 3.1.0 once Django 3.1 is released
 DJANGO_SUPPORTED_VERSION = '3.0.0'
@@ -61,8 +58,9 @@ class CookiesSameSite(MiddlewareMixin):
         # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
         # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
         http_user_agent = request.META.get('HTTP_USER_AGENT') or " "
+        user_agent_checker = UserAgentChecker(http_user_agent)
 
-        if re.search(CHROME_VALIDATE_REGEX, http_user_agent):
+        if user_agent_checker.do_not_send_same_site_policy:
             return response
 
         if LooseVersion(django.get_version()) >= LooseVersion(DJANGO_SUPPORTED_VERSION):
