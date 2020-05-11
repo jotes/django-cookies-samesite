@@ -255,9 +255,8 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
         # Internet Explorer
         "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)",
         # Safari
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) '
-        'Version/10.0 Mobile/14E304 Safari/602.1 '
-        # noqa
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) "
+        "Version/10.0 Mobile/14E304 Safari/602.1 "
     )
     @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
     def test_supported_browsers(self, ua_string):
@@ -279,6 +278,42 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
             cookies_string = sorted(response.cookies.output().split('\r\n'))
             self.assertTrue('; SameSite=Lax' in cookies_string[0])
             self.assertTrue('; SameSite=Lax' in cookies_string[2])
+
+    @data(
+        # Chrome
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.2704.103 Safari/537.36",
+        # Firefox
+        "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
+        # Internet Explorer
+        "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)",
+        # Safari
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) "
+        "Version/10.0 Mobile/14E304 Safari/602.1 "
+        # noqa
+    )
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
+    def test_supported_browsers_with_secure_true(self, ua_string):
+        session_name = 'sessionid-test'
+        csrf_name = 'csrftoken-test'
+
+        with self.settings(
+            SESSION_COOKIE_NAME=session_name,
+            CSRF_COOKIE_NAME=csrf_name,
+            SESSION_COOKIE_SAMESITE='None'
+        ):
+            response = self.client.get(
+                '/cookies-test/',
+                HTTP_USER_AGENT=ua_string,
+                secure=True,
+            )
+            self.assertEqual(response.cookies[session_name]['samesite'], 'None')
+            self.assertEqual(response.cookies[session_name]['secure'], True)
+            self.assertEqual(response.cookies[csrf_name]['samesite'], 'None')
+            self.assertEqual(response.cookies[csrf_name]['secure'], True)
+
+            cookies_string = sorted(response.cookies.output().split('\r\n'))
+            self.assertTrue('; SameSite=None; Secure' in cookies_string[0])
+            self.assertTrue('; SameSite=None; Secure' in cookies_string[2])
 
 
 @ddt
