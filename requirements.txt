@@ -1,2 +1,2 @@
-
 # Additional requirements go here
+ua-parser==0.10.0
