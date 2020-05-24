@@ -1,4 +1,4 @@
-.PHONY: clean-pyc clean-build docs help
+.PHONY: clean-pyc clean-build docs help black black-check
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -37,7 +37,14 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 
-lint: ## check style with flake8
+
+black: ## format all files with Black
+	black django_cookies_samesite
+
+black-check: ## check if python files are correctly formatted
+	black --check django_cookies_samesite
+
+flake8: ## check style with flake8
 	flake8 django_cookies_samesite tests
 
 test: ## run tests quickly with the default Python
