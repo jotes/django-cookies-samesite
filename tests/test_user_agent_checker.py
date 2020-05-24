@@ -139,6 +139,10 @@ class TestUserAgentChecker(unittest.TestCase):
                                               "Safari/602.1.26")
         self.assertEqual(user_agent_checker.is_supported_ios_version(), False)
 
+    def test_mobile_user_issue_28(self):
+        user_agent_checker = UserAgentChecker("edX/2.22.0 CFNetwork/1121.2.2 Darwin/19.3.0")
+        self.assertEqual(user_agent_checker.is_supported_ios_version(), True)
+
     def test_is_unsupported_mac_osx_version(self):
         user_agent_checker = UserAgentChecker("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14) AppleWebKit/605.1.15 ("
                                               "KHTML, like Gecko) Version/12.0 Safari/605.1.15")

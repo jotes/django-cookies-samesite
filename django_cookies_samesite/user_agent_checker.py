@@ -70,22 +70,28 @@ class UserAgentChecker:
         return True if self.is_chrome_browser() and (
             self.BUGGY_CHROME_VERSION_MAJOR_MIN > uav or uav > self.BUGGY_CHROME_VERSION_MAJOR_MAX) else False
 
-    def is_supported_chrome(self):
-        return self.is_chrome_supported_version()
+    def get_user_agent_os_version(self, version_type):
+        return int(self.user_agent_os.get(version_type, '0') if self.user_agent_os.get(version_type) else '0')
+
+    def get_user_agent_os_major(self):
+        return self.get_user_agent_os_version('major')
+
+    def get_user_agent_os_minor(self):
+        return self.get_user_agent_os_version('minor')
 
     def is_ios(self):
         return self.user_agent_os.get('family') == self.IOS
 
     def is_supported_ios_version(self):
-        return self.is_ios() and not (int(self.user_agent_os.get('major', '0')) == self.MIN_IOS_VERSION)
+        return self.is_ios() and not (self.get_user_agent_os_major() == self.MIN_IOS_VERSION)
 
     def is_mac_osx(self):
         return self.user_agent_os.get('family', '') == self.MAC_OSX
 
     def is_supported_mac_osx_version(self):
         if self.is_mac_osx():
-            is_min_mac_maj = (int(self.user_agent_os.get('major', '0')) == self.MIN_MAC_OSX_VERSION_MAJOR)
-            is_min_mac_min = (int(self.user_agent_os.get('minor', '0')) == self.MIN_MAC_OSX_VERSION_MINOR)
+            is_min_mac_maj = (self.get_user_agent_os_major() == self.MIN_MAC_OSX_VERSION_MAJOR)
+            is_min_mac_min = (self.get_user_agent_os_minor() == self.MIN_MAC_OSX_VERSION_MINOR)
             return not (is_min_mac_maj and is_min_mac_min)
         return False
 
