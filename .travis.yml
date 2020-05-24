@@ -19,7 +19,12 @@ install:
 
 # command to run tests using coverage, e.g. python setup.py test
 script:
-  - make lint
+  - make flake8
+  - |
+    if [ $TRAVIS_PYTHON_VERSION != "2.7" ]; then
+        pip install -r requirements_dev_python3.txt &&
+        make black-check
+    fi
   - tox
 
 after_success:

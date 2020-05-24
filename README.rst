@@ -94,8 +94,10 @@ Tools used in rendering this package:
 
 Contributors
 ------------
-* Jørn Lomax <northlomax@gmail.com>
-* Antoine Lefebvre-Brossard <antoinelb@protonmail.com>
 * Code Hugger (Matthew Jones) <jonespm@umich.edu>
-* Mykolas Kvieska <mykolas921@gmail.com>
-* Liuyang Wan <tsfdye@gmail.com>
+* Jarosław Śmiejczak <poke@jotes.work>
+* Jørn Lomax <northlomax@gmail.com>
+* Liuyang Wan <noreply@github.com>
+* Mykolas Kvieska <noreply@github.com>
+* Tim McCormack <tmccormack@edx.org>
+
