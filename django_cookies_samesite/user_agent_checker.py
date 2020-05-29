@@ -60,13 +60,13 @@ class UserAgentChecker:
 
     def is_uc_browser_in_least_supported_version(self):
         major = int(
-            self.user_agent.get("major", "0") if self.user_agent.get("major") else "0"
+            self.user_agent.get("major") or "0"
         )
         minor = int(
-            self.user_agent.get("minor", "0") if self.user_agent.get("minor") else "0"
+            self.user_agent.get("minor") or "0"
         )
         build = int(
-            self.user_agent.get("patch", "0") if self.user_agent.get("patch") else "0"
+            self.user_agent.get("patch") or "0"
         )
         if self.is_uc_browser():
             if self.MIN_UC_BROWSER_VER_MAJOR == major:
@@ -87,7 +87,7 @@ class UserAgentChecker:
 
     def is_chrome_supported_version(self):
         uav = int(
-            self.user_agent.get("major", "0") if self.user_agent.get("major") else "0"
+            self.user_agent.get("major") or "0"
         )
         return (
             True
@@ -101,9 +101,7 @@ class UserAgentChecker:
 
     def get_user_agent_os_version(self, version_type):
         return int(
-            self.user_agent_os.get(version_type, "0")
-            if self.user_agent_os.get(version_type)
-            else "0"
+            self.user_agent_os.get(version_type) or "0"
         )
 
     def get_user_agent_os_major(self):
