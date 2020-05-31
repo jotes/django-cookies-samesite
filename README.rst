@@ -94,6 +94,7 @@ Tools used in rendering this package:
 
 Contributors
 ------------
+* Abdul Rafiu <rafiu.rahim@gmail.com>
 * Code Hugger (Matthew Jones) <jonespm@umich.edu>
 * Jarosław Śmiejczak <poke@jotes.work>
 * Jørn Lomax <northlomax@gmail.com>
