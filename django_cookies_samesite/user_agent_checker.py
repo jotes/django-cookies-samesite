@@ -61,7 +61,10 @@ class UserAgentChecker:
     def is_uc_browser_in_least_supported_version(self):
         major = int(self.user_agent.get("major") or "0")
         minor = int(self.user_agent.get("minor") or "0")
-        build = int(self.user_agent.get("patch") or "0")
+        try:
+            build = int(self.user_agent.get("patch") or "0")
+        except ValueError:
+            build = 0
         if self.is_uc_browser():
             if self.MIN_UC_BROWSER_VER_MAJOR == major:
                 if self.MIN_UC_BROWSER_VER_MINOR == minor:
