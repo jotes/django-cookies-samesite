@@ -148,6 +148,10 @@ class TestUserAgentChecker(unittest.TestCase):
                                               "KHTML, like Gecko) Version/12.0 Safari/605.1.15")
         self.assertEqual(user_agent_checker.is_supported_mac_osx_safari(), False)
 
+    def test_firefox_alpha(self):
+        user_agent_checker = UserAgentChecker("Mozilla/5.0 (Windows NT 6.1; rv:15.0) Gecko/20120716 Firefox/15.0a2")
+        self.assertEqual(user_agent_checker.is_uc_browser_in_least_supported_version(), False)
+
 
 if __name__ == '__main__':
     unittest.main()
