@@ -148,8 +148,17 @@ class TestUserAgentChecker(unittest.TestCase):
                                               "KHTML, like Gecko) Version/12.0 Safari/605.1.15")
         self.assertEqual(user_agent_checker.is_supported_mac_osx_safari(), False)
 
-    def test_firefox_alpha(self):
+    def test_non_numeric_versions(self):
+        # Patch version is not a numeric 'a2'
         user_agent_checker = UserAgentChecker("Mozilla/5.0 (Windows NT 6.1; rv:15.0) Gecko/20120716 Firefox/15.0a2")
+        self.assertEqual(user_agent_checker.is_uc_browser_in_least_supported_version(), False)
+
+        # Minor & patch versions are not numeric 'x'
+        user_agent_checker = UserAgentChecker("Liferea/0.x.x (Linux; en_US.UTF-8; http://liferea.sf.net/)")
+        self.assertEqual(user_agent_checker.is_uc_browser_in_least_supported_version(), False)
+
+        # All version parts are not numeric
+        user_agent_checker = UserAgentChecker("Liferea/x.x.x (Linux; en_US.UTF-8; http://liferea.sf.net/)")
         self.assertEqual(user_agent_checker.is_uc_browser_in_least_supported_version(), False)
 
 
