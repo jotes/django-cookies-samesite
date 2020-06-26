@@ -27,6 +27,17 @@ class UserAgentChecker:
         self.user_agent_string = user_agent_parsed.get("string", "")
 
     @property
+    def user_agent_version_parts(self):
+        version_parts = []
+        for name in ["major", "minor", "patch"]:
+            try:
+                num_part = int(self.user_agent.get(name))
+            except (TypeError, ValueError):
+                num_part = 0
+            version_parts.append(num_part)
+        return version_parts
+
+    @property
     def do_not_send_same_site_policy(self):
         if not self.user_agent_string:
             return False
@@ -59,9 +70,7 @@ class UserAgentChecker:
         return self.user_agent.get("family") == "UC Browser"
 
     def is_uc_browser_in_least_supported_version(self):
-        major = int(self.user_agent.get("major") or "0")
-        minor = int(self.user_agent.get("minor") or "0")
-        build = int(self.user_agent.get("patch") or "0")
+        major, minor, build = self.user_agent_version_parts
         if self.is_uc_browser():
             if self.MIN_UC_BROWSER_VER_MAJOR == major:
                 if self.MIN_UC_BROWSER_VER_MINOR == minor:
@@ -80,7 +89,7 @@ class UserAgentChecker:
         )
 
     def is_chrome_supported_version(self):
-        uav = int(self.user_agent.get("major") or "0")
+        uav, _, _ = self.user_agent_version_parts
         return (
             True
             if self.is_chrome_browser()
