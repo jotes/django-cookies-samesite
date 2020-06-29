@@ -1,26 +1,13 @@
 .PHONY: clean-pyc clean-build docs help black black-check
 .DEFAULT_GOAL := help
-define BROWSER_PYSCRIPT
-import os, webbrowser, sys
-try:
-	from urllib import pathname2url
-except:
-	from urllib.request import pathname2url
 
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
-endef
-export BROWSER_PYSCRIPT
 USER_NAME := $(shell id -u -n)
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
-BUMPVERSION := docker run \
-   --env USER  --env USER_ID=`id -u` \
-   --env GROUP --env GROUP_ID=`id -g` \
-   --interactive --tty --rm \
-   --volume $(shell pwd):/home/$(USER_NAME)/host  \
-   -v ~/.gitconfig:/etc/gitconfig \
-   -w /home/$(USER_NAME)/host \
-   jesuspv/bumpversion --config-file setup.cfg
 
+BUMPVERSION := docker run \
+	-v $(shell pwd):/src \
+	-v ~/.gitconfig:/etc/gitconfig \
+	-w /src \
+	tomologic/bumpversion
 
 help:
 	@grep '^[a-zA-Z]' $(MAKEFILE_LIST) | sort | awk -F ':.*?## ' 'NF==2 {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
@@ -76,5 +63,5 @@ sdist: clean ## package
 	ls -l dist
 
 bump: part?=minor
-bump: ## Relese a new version
-	$(BUMPVERSION) $(part)
+bump: ## Release a new version
+	$(BUMPVERSION) $(part) setup.cfg
