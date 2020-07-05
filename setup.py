@@ -33,7 +33,7 @@ def load_requirements(*requirements_paths):
     """
     requirements = set()
     for path in requirements_paths:
-        with open(path) as reqs:
+        with open(path, encoding='utf-8') as reqs:
             requirements.update(
                 line.split('#')[0].strip() for line in reqs
                 if is_requirement(line.strip())
