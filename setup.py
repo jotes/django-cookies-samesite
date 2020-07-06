@@ -67,7 +67,7 @@ if sys.argv[-1] == 'tag':
     os.system("git push --tags")
     sys.exit()
 
-readme = open('README.rst').read()
+readme = open('README.rst', encoding='utf-8').read()
 
 setup(
     name='django-cookies-samesite',

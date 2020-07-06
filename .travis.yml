@@ -2,6 +2,10 @@
 
 language: python
 
+env:
+  - LC_CTYPE=c LC_ALL=c
+  - LC_CTYPE=en_US.utf-8 LC_ALL=en_US.utf-8
+
 python:
   - "2.7"
   - "3.6"
