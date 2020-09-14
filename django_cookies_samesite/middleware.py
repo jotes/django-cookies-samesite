@@ -9,6 +9,7 @@ import django
 from distutils.version import LooseVersion
 
 from django.conf import settings
+from django.utils.encoding import smart_str
 
 try:
     from django.utils.deprecation import MiddlewareMixin
@@ -74,7 +75,14 @@ class CookiesSameSite(MiddlewareMixin):
     def process_response(self, request, response):
         # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
         # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
-        http_user_agent = request.META.get("HTTP_USER_AGENT") or " "
+        # Some of HTTP Clients have non-ascii characters in their User Agents. The most feasible solution to that
+        # problem is to ignore all non-ascii characters.
+        # Related: https://stackoverflow.com/questions/4400678/what-character-encoding-should-i-use-for-a-http-header
+        http_user_agent = smart_str(
+            request.META.get("HTTP_USER_AGENT") or " ",
+            encoding="ascii",
+            errors="ignore",
+        )
         user_agent_checker = UserAgentChecker(http_user_agent)
 
         if user_agent_checker.do_not_send_same_site_policy:
