@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 import unittest
 from contextlib import contextmanager
 from distutils.version import LooseVersion
@@ -315,8 +316,31 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
             self.assertTrue('; SameSite=None; Secure' in cookies_string[0])
             self.assertTrue('; SameSite=None; Secure' in cookies_string[2])
 
+    @data(
+        b"Mozilla/5.0 (Linux; Android 7.1.2; Moto E\xef\xbf\xbd POWER) AppleWebKit/537.36",
+        b"Mozilla/5.0 (Linux; Android 7.1.2; Moto E\xff\xff\xbd POWER) AppleWebKit/537.36",
+    )
+    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
+    def test_user_agent_contains_non_ascii_characters(self, ua_string):
+        """The middleware handles the case when an HTTP client's User Agent contains non-ascii characters."""
+        session_name = 'sessionid-test'
+        csrf_name = 'csrftoken-test'
 
-@ddt
-class CookiesSamesiteTestsWithoutConfigPrefix(TestCase):
-    """Check if the middleware works in the same way if settings don't have DCS_ prefix."""
-    config_prefix = ""
+        with self.settings(
+            SESSION_COOKIE_NAME=session_name,
+            CSRF_COOKIE_NAME=csrf_name,
+            SESSION_COOKIE_SAMESITE='None'
+        ):
+            response = self.client.get(
+                '/cookies-test/',
+                HTTP_USER_AGENT=ua_string,
+                secure=True,
+            )
+            self.assertEqual(response.cookies[session_name]['samesite'], 'None')
+            self.assertEqual(response.cookies[session_name]['secure'], True)
+            self.assertEqual(response.cookies[csrf_name]['samesite'], 'None')
+            self.assertEqual(response.cookies[csrf_name]['secure'], True)
+
+            cookies_string = sorted(response.cookies.output().split('\r\n'))
+            self.assertTrue('; SameSite=None; Secure' in cookies_string[0])
+            self.assertTrue('; SameSite=None; Secure' in cookies_string[2])
