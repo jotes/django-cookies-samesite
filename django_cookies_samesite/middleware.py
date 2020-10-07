@@ -21,8 +21,7 @@ from django_cookies_samesite.user_agent_checker import UserAgentChecker
 Cookie.Morsel._reserved["samesite"] = "SameSite"
 Cookie.Morsel._reserved.update({"samesite": "SameSite", "secure": "Secure"})
 
-# TODO: change this to 3.1.0 once Django 3.1 is released
-DJANGO_SUPPORTED_VERSION = "3.0.0"
+DJANGO_SUPPORTED_VERSION = "3.1.0"
 
 
 def get_config_setting(setting_name, default_value=None):
@@ -37,7 +36,8 @@ def get_config_setting(setting_name, default_value=None):
 class CookiesSameSite(MiddlewareMixin):
     """
     Support for SameSite attribute in Cookies is fully implemented in Django 3.1 and won't
-    be back-ported to Django 2.x.
+    be back-ported to Django 3.0 or earlier.
+
     This middleware will be obsolete when your app will start using Django 3.1.
     """
 
