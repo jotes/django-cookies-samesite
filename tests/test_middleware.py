@@ -124,7 +124,7 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
             self.assertTrue('; SameSite=None' in cookies_string[3])
 
     @unittest.skipIf(django.get_version() < DJANGO_SUPPORTED_VERSION, 'should skip if Django does not support')
-    def test_cookie_samesite_django30(self):
+    def test_cookie_samesite_django31(self):
         # Raise DeprecationWarning for newer versions of Django
         with patch('django.get_version', return_value=DJANGO_SUPPORTED_VERSION):
             with self.assertRaises(DeprecationWarning) as exc:
@@ -187,7 +187,7 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
 
             self.assertEqual(exc.exception.args[0], 'samesite must be "Lax", "None", or "Strict".')
 
-    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
+    @unittest.skipIf(django.get_version() >= '2.1.0', 'should skip if Django sets SameSite')
     def test_cookie_samesite_unset(self):
         with self.settings(SESSION_COOKIE_SAMESITE=None):
             response = self.client.get('/cookies-test/')
@@ -223,7 +223,7 @@ class CookiesSamesiteTestsWithConfigPrefix(TestCase):
             self.assertTrue(session_name + '=' in cookies_string[2])
             self.assertTrue('; SameSite=Lax' in cookies_string[2])
 
-    @unittest.skipIf(django.get_version() >= DJANGO_SUPPORTED_VERSION, 'should skip if Django already supports')
+    @unittest.skipIf(django.get_version() >= '2.1.0', 'should skip if Django sets SameSite')
     @data(
         # Chrome
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
