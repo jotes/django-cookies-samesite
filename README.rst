@@ -44,6 +44,7 @@ Add the middleware to the top of `MIDDLEWARE_CLASSES`:
 
 
 Set your preferred SameSite policy in `settings.py`:
+
 .. code-block:: python
 
    SESSION_COOKIE_SAMESITE = 'lax'
@@ -100,4 +101,3 @@ Contributors
 * Liuyang Wan <noreply@github.com>
 * Mykolas Kvieska <noreply@github.com>
 * Tim McCormack <tmccormack@edx.org>
-
