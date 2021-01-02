@@ -18,7 +18,6 @@ except ImportError:
 
 from django_cookies_samesite.user_agent_checker import UserAgentChecker
 
-Cookie.Morsel._reserved["samesite"] = "SameSite"
 Cookie.Morsel._reserved.update({"samesite": "SameSite", "secure": "Secure"})
 
 DJANGO_SUPPORTED_VERSION = "3.1.0"
