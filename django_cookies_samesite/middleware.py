@@ -63,12 +63,19 @@ class CookiesSameSite(MiddlewareMixin):
         self.samesite_force_all = get_config_setting(
             "SESSION_COOKIE_SAMESITE_FORCE_ALL"
         )
+        # SAMESITE_DEVMODE=True means, use Lax if http request.
+        self.devmode = bool(get_config_setting("SAMESITE_DEVMODE"))
 
         return super(CookiesSameSite, self).__init__(*args, **kwargs)
 
     def update_cookie(self, cookie, request, response):
-        response.cookies[cookie]["samesite"] = self.samesite_flag
-        if request.is_secure():
+        https = request.is_secure()
+        if self.devmode and not https:
+            flag = "Lax"
+        else:
+            flag = self.samesite_flag
+        response.cookies[cookie]["samesite"] = flag
+        if https:
             response.cookies[cookie]["secure"] = True
 
     def process_response(self, request, response):
