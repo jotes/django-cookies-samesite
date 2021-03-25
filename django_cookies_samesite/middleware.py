@@ -51,10 +51,11 @@ class CookiesSameSite(MiddlewareMixin):
             )
 
         self.protected_cookies = set(self.protected_cookies)
-        self.protected_cookies |= {
-            settings.SESSION_COOKIE_NAME,
-            settings.CSRF_COOKIE_NAME,
-        }
+        if get_config_setting("SESSION_COOKIE_SAMESITE_FORCE_CORE", True):
+            self.protected_cookies |= {
+                settings.SESSION_COOKIE_NAME,
+                settings.CSRF_COOKIE_NAME,
+            }
 
         samesite_flag = get_config_setting("SESSION_COOKIE_SAMESITE", "")
         self.samesite_flag = (
