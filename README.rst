@@ -70,6 +70,14 @@ You can set the SameSite flag on all cookies (even on those coming from third-pa
     # or
     DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
+The `sessionid` and `csrftoken` cookies are automatically handled by the middleware. This behavior can be disabled with:
+
+.. code-block:: python
+
+   SESSION_COOKIE_SAMESITE_FORCE_CORE = False
+   # or
+   DCS_SESSION_COOKIE_SAMESITE_FORCE_CORE = False
+
 Running Tests
 -------------
 
