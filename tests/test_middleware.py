@@ -44,7 +44,7 @@ class CookieSamesiteConfigTests(TestCase):
             self.assertEqual(middleware.samesite_flag, 'Lax')
             self.assertEqual(middleware.samesite_force_all, True)
             self.assertEqual(middleware.protected_cookies, {'sessionid', 'csrftoken', 'custom_cookie'})
-    
+
         with(self.settings(**{
             "{}SESSION_COOKIE_SAMESITE_FORCE_CORE".format(config_prefix): False,
             "{}SESSION_COOKIE_SAMESITE_KEYS".format(config_prefix): {'custom_cookie'},
