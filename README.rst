@@ -11,6 +11,14 @@ django-cookies-samesite
 .. image:: https://codecov.io/gh/jotes/django-cookies-samesite/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/jotes/django-cookies-samesite
 
+Repository status
+-----------------
+The project isn't actively maintained anymore. If you want to help and add a link to your fork, add it there: https://github.com/jotes/django-cookies-samesite/issues/50 .
+
+Description
+-----------
+
+
 This repository contains a middleware which automatically sets SameSite attribute for session and csrf cookies in legacy versions of Django e.g. 1.11.x, 2.2.x or 3.0.x.
 
 This module is not needed for Django 3.1.x which introduces full support of SameSite flag for session and csrf cookie. 
